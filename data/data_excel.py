@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import xlsxwriter
+from datetime import date,datetime
 
 main_data = []
 
@@ -28,8 +29,12 @@ for i in range(0,l):
     for i in range(0, len(data2), 2):
         data2_dict[data2[i]] = data2[i+1]
 
-    date = soup.find('span', class_='date-meta').text[11:-6]
-    print(date)
+    dates = soup.find('span', class_='date-meta').text[11:-6]
+    date_string = "Өчигдөр"
+    today = date.today()
+    if dates == date_string:
+        dates = today
+
     price = soup.find('meta', {'itemprop': 'price'})['content']
 
     desc = soup.find('div', class_='js-description').text.split('\n')
@@ -37,14 +42,14 @@ for i in range(0,l):
 
     data2_dict['Тайлбар'] = desc
     data2_dict['Үнэ'] = price
-    dicts = {'Гарчиг':data1,'Огноо':date,'Марк':data}
+    dicts = {'Гарчиг':data1,'Огноо':dates,'Марк':data}
     dicts.update(data2_dict)
 
     keys = list(dicts.keys())
     urt = len(keys)
     main_data.append(dicts)
 
-    workbook = xlsxwriter.Workbook("unegui_mn.xlsx")
+    workbook = xlsxwriter.Workbook("unegui_mn2йыбйыбйыбasdasd.xlsx")
     worksheet = workbook.add_worksheet("firstSheet")
 
     for i in range(0, urt):
@@ -72,4 +77,3 @@ for i in range(0,l):
         worksheet.write(index+1, 19,entry['Үнэ'])
     workbook.close()
 print(main_data)
-    
