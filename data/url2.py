@@ -60,10 +60,11 @@ for i in range(0,len(url4)):
         if href is not None:
             if href == '#':
                 pass                
-            else:
+            elif href[13:16] == 'bmw':
                 url5.append(href)
         # links = list(set(links))
     url5 = list(set(url5))
-# print(url5)
-for link in url5:
-        print(link)
+print(len(url5))
+# for link in url5:
+#         print(len(link))
+#kajsgdhagsddaksajsd
