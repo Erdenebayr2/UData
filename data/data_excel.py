@@ -1,13 +1,72 @@
 import requests
 from bs4 import BeautifulSoup
 import xlsxwriter
-from datetime import date,datetime
+from datetime import date,datetime,timedelta
+url1 = []
+url2 = []
+url3 = []
+url4 = []
+url5 = []
+url6 = []
+
+site = "https://www.unegui.mn"
+slink = "/avto-mashin/-avtomashin-zarna/"
+surl = site + slink
+response = requests.get(surl)
+
+soup = BeautifulSoup(response.content, "html.parser")
+data_url1 = soup.find('ul',class_='rubrics-list clearfix js-toggle-content toggle-content')
+
+for link in data_url1.find_all("a"):
+    href = link.get("href")
+    if href is not None:
+        if href[0:30] == '/avto-mashin/-avtomashin-zarna':
+            url1.append(href)
+
+for i in range(0,len(url1)):
+    surl1 = site + url1[i]
+    url2.append(surl1)
+
+#url3
+
+for i in range(0,len(url2)):
+    response1 = requests.get(url2[i])
+    soup1 = BeautifulSoup(response1.content, "html.parser")
+    data_url2 = soup1.find('div',class_='js-toggle toggle-block')
+    for link in data_url2.find_all("a"):
+        href = link.get("href")
+        if href is not None:
+            if href == '#':
+                pass
+            else:
+                url3.append(href)
+    url3 = list(set(url3))
+
+for i in range(0,len(url3)):
+     surl2 = site + url3[i]
+     url4.append(surl2)
+
+#url 5
+
+for i in range(0,len(url4)):
+    response2 = requests.get(url4[i])
+    soup2 = BeautifulSoup(response2.content, "html.parser")
+    for link in soup2.find_all("a"):
+        href = link.get("href")
+        if href is not None:
+            if href == '#':
+                pass                
+            elif href[0:4] == '/adv':
+                url5.append(href)
+    url5 = list(set(url5))
+
+for i in range(0,len(url5)):
+     surl3 = site + url5[i]
+     url6.append(surl3)
 
 main_data = []
 
-inp = ['https://www.unegui.mn/adv/6879778_subaru-xt-2012-2012/',
-       'https://www.unegui.mn/adv/6948378_toyota-prius-30-2013-2023/',
-       'https://www.unegui.mn/adv/6996937_bmw-3-seri-2002-2012/']
+inp = url6
 l = len(inp)
 for i in range(0,l):
     url = inp[i]
@@ -15,25 +74,51 @@ for i in range(0,l):
     soup = BeautifulSoup(response.content,'html.parser')
 
     data = soup.find('ul',class_='breadcrumbs').text.split('\n') # get breadcrumbs
-    data = [element for element in data if element != ''][1]
+    data = [element for element in data if element != '']
+    data = data[-2]+'/'+data[-1]
 
     data1 = soup.find('h1').text.split('\n') # get title
     data1 = [element for element in data1 if element != '']
-    data1 = [line.strip() for line in data1 if line.strip()][0]
+    data1 = [line.strip() for line in data1 if line.strip()][0].split(',')[0]
 
-
-    data2 = soup.find('ul',class_='chars-column').text.split('\n') # get values
-    data2 = [element for element in data2 if element != '']
-    data2 = [line.strip() for line in data2 if line.strip()]
+    data2 = soup.find('ul',class_='chars-column') # get values
+    if data2:
+        data2 = data2.text.split('\n')
+    else:
+        pass
+    if data2 is not None:
+        data2 = [element for element in data2 if element != '']
+        data2 = [line.strip() for line in data2 if line.strip()]
+        data2[1] = data2[1][:3]
+        data2[1] = float(data2[1])*1000
+        data2[1] = str(data2[1])
+        data2[-5] = data2[-5][:-4]
+    else:
+        pass
+    if 'Хаяг байршил:' not in data2:
+        data2[10:12] = ('Хаяг байршил:', '')
+    else:
+        pass
     data2_dict = {}
+
     for i in range(0, len(data2), 2):
         data2_dict[data2[i]] = data2[i+1]
 
-    dates = soup.find('span', class_='date-meta').text[11:-6]
-    date_string = "Өчигдөр"
-    today = date.today()
-    if dates == date_string:
-        dates = today
+    ogno = soup.find('span', class_='date-meta').text[11:-6]
+    unuudr = 'Өнөөдөр'
+    uchigdur = 'Өчигдөр'
+    yester = datetime.now() - timedelta(days=1)
+    yesterday = str(yester.date())
+    today = str(date.today())
+
+    if ogno == unuudr:
+        ogno = today
+
+    elif ogno == uchigdur:
+        ogno = yesterday
+    
+    else:
+        ogno
 
     price = soup.find('meta', {'itemprop': 'price'})['content']
 
@@ -42,18 +127,21 @@ for i in range(0,l):
 
     data2_dict['Тайлбар'] = desc
     data2_dict['Үнэ'] = price
-    dicts = {'Гарчиг':data1,'Огноо':dates,'Марк':data}
+    dicts = {'Гарчиг':data1,'Огноо':ogno,'Марк':data}
     dicts.update(data2_dict)
-
-    keys = list(dicts.keys())
-    urt = len(keys)
     main_data.append(dicts)
 
-    workbook = xlsxwriter.Workbook("unegui_mn2йыбйыбйыбasdasd.xlsx")
+    workbook = xlsxwriter.Workbook("unegui_auto.xlsx")
     worksheet = workbook.add_worksheet("firstSheet")
 
-    for i in range(0, urt):
-        worksheet.write(0,i,keys[i])    
+    col = ['Гарчиг','Огноо','Марк','Мотор багтаамж:','Хурдны хайрцаг:','Хүрд:',
+     'Төрөл:','Өнгө:','Үйлдвэрлэсэн он:','Орж ирсэн он:','Хөдөлгүүр:',
+     'Дотор өнгө:','Лизинг:','Хаяг байршил:','Хөтлөгч:','Явсан:','Нөхцөл:',
+     'Хаалга:','Тайлбар','Үнэ']
+    lcol = len(col)
+    for i in range(0, lcol):
+        worksheet.write(0,i,col[i])
+
     for index,entry in enumerate(main_data):
         worksheet.write(index+1, 0,entry['Гарчиг'])
         worksheet.write(index+1, 1,entry['Огноо'])
@@ -76,4 +164,4 @@ for i in range(0,l):
         worksheet.write(index+1, 18,entry['Тайлбар'])
         worksheet.write(index+1, 19,entry['Үнэ'])
     workbook.close()
-print(main_data)
+    
