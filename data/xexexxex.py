@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import xlsxwriter
 from datetime import date,datetime,timedelta
 
-with open("url.txt", "r") as file:
+with open("urls.txt", "r") as file:
     content = file.read().split("\n")
     s = []
     l = len(content)
@@ -14,10 +14,9 @@ for ii in s:
 
 main_data = []
 
-inp = last_url
-l = len(inp)
+l = len(last_url)
 for i in range(0,l):
-    url = inp[i]
+    url = last_url[i]
     response = requests.get(url)
     soup = BeautifulSoup(response.content,'html.parser')
 
@@ -30,29 +29,18 @@ for i in range(0,l):
     data1 = [line.strip() for line in data1 if line.strip()][0].split(',')[0]
 
     data2 = soup.find('ul',class_='chars-column') # get values
-    if data2:
-        data2 = data2.text.split('\n')
-    else:
-        pass
-    
-    if data2 is not None:
-        data2 = [element for element in data2 if element != '']
-        data2 = [line.strip() for line in data2 if line.strip()]
-        data2[1] = data2[1][:3]
-        data2[1] = float(data2[1])*1000
-        data2[1] = str(data2[1])
-        data2[-5] = data2[-5][:-4]
-    else:
-        pass
-    print(data2)
+    data2 = data2.text.split('\n')
+
+    data2 = [element for element in data2 if element != '']
+    data2 = [line.strip() for line in data2 if line.strip()]
+    data2[1] = data2[1][:3]
+    data2[1] = float(data2[1])*1000
+    data2[1] = str(data2[1])
+    data2[-5] = data2[-5][:-4]
+
     if 'Хаяг байршил:' not in data2:
         data2[20:22] = ('Хаяг байршил:', '')
-    else:
-        pass
-    if 'Үйлдвэрлэсэн он:' not in data2:
-        data2[10:12] = ('Үйлдвэрлэсэн он:', '')
-    else:
-        pass
+
     data2_dict = {}
 
     for i in range(0, len(data2), 2):

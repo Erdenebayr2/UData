@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-i = 177
+i = 200
 while i > 0:
     url = "https://www.unegui.mn/avto-mashin/-avtomashin-zarna/?page=" + str(i)
     response = requests.get(url)
